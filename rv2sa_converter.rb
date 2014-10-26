@@ -24,7 +24,8 @@ class Rv2sa::Converter::Composition
       definition = Definition.new(flags)
       begin
         definition.instance_eval(script)
-      rescue
+      rescue => e
+        warn "#{e.class.to_s}: #{e.to_s}"
         raise InvalidFormatedFile
       end
 
@@ -68,7 +69,7 @@ class Rv2sa::Converter::Composition
     attr_reader :files
 
     def initialize(flags)
-      @flags = flags
+      @flags = flags || []
       @files = []
     end
     
@@ -76,11 +77,11 @@ class Rv2sa::Converter::Composition
     # @param [Array|String] filelist
     # @param [Array<Symbol>] flags
     def add(filelist, flags = [])
+      flags = [flags].flatten
       return unless flags.empty? || flags.any?(&@flags.method(:include?))
-
       case filelist
       when String
-        @files += filelist.split("\n")
+        @files += filelist.unindent.split("\n")
       else
         @files += [filelist].flatten
       end
@@ -114,7 +115,7 @@ class Rv2sa::Converter::Decomposition
       end
 
       File.open("#{output}/Scripts.conf.rb", "w") {|f|
-        f.puts %Q(add <<-EOS.unindent)
+        f.puts %Q(add <<-EOS)
         entries.each do |entry|
           f.puts %Q(  #{entry[1]})
         end
