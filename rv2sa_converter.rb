@@ -6,6 +6,7 @@ require "zlib"
 module Rv2sa
 module Converter
   class InvalidFormatedFile < StandardError; end
+  DefinitionFile = "Scripts.conf.rb"
 
 end
 end
@@ -20,8 +21,8 @@ class Rv2sa::Converter::Composition
     def convert(input, output, flags)
       work = File.dirname(input) + "/"
       
-      script = File.open(input).read
-      definition = Definition.new(flags)
+      script = File.open(input) {|f| f.read }
+      definition = Definition.new(flags, work)
       begin
         definition.instance_eval(script)
       rescue => e
@@ -70,10 +71,17 @@ class Rv2sa::Converter::Composition
   class Definition
     attr_reader :flags
     attr_reader :files
+    attr_reader :work_dir
 
-    def initialize(flags)
+    def initialize(flags, work_dir)
+      @work_dir = work_dir
+      @imports = []
       @flags = flags || []
       @files = []
+    end
+
+    def current_path
+      @imports.empty? ? "" : (@imports.join("/") + "/")
     end
     
     # ÉtÉ@ÉCÉãÇÃí«â¡
@@ -82,11 +90,27 @@ class Rv2sa::Converter::Composition
     def add(filelist, flags = [])
       flags = [flags].flatten
       return unless flags.empty? || flags.any?(&@flags.method(:include?))
-      case filelist
-      when String
-        @files += filelist.unindent.split("\n")
-      else
-        @files += [filelist].flatten
+      filelist = filelist.unindent.split("\n") if filelist.is_a?(String)
+
+      path = current_path
+      @files += filelist.collect {|file| path + file }
+    end
+
+    # ï ÇÃScripts.conf.rbÇ©ÇÁì«Ç›çûÇﬁ
+    # @param [Array|String] filelist
+    # @param [Array<Symbol>] flags
+    def import(filelist, flags = [])
+      flags = [flags].flatten
+      return unless flags.empty? || flags.any?(&@flags.method(:include?))
+      filelist = filelist.unindent.split("\n") if filelist.is_a?(String)
+
+      path = @work_dir + current_path
+      filelist.each do |file|
+        filename = path + file + "/" + DefinitionFile
+        script = File.open(filename) {|f| f.read }
+        @imports.push file
+        self.instance_eval(script)
+        @imports.pop
       end
     end
   end
@@ -117,7 +141,7 @@ class Rv2sa::Converter::Decomposition
         File.binwrite(filename, Zlib::Inflate.inflate(entry[2]))
       end
 
-      File.open("#{output}/Scripts.conf.rb", "w") {|f|
+      File.open("#{output}/#{DefinitionFile}", "w") {|f|
         f.puts %Q(add <<-EOS)
         entries.each do |entry|
           f.puts %Q(  #{entry[1]})
