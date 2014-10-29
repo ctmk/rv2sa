@@ -7,7 +7,6 @@ module Rv2sa
 module Converter
   class InvalidFormatedFile < StandardError; end
   DefinitionFile = "Scripts.conf.rb"
-
 end
 end
 
@@ -106,7 +105,7 @@ class Rv2sa::Converter::Composition
 
       path = @work_dir + current_path
       filelist.each do |file|
-        filename = path + file + "/" + DefinitionFile
+        filename = path + file + "/" + Rv2sa::Converter::DefinitionFile
         script = File.open(filename) {|f| f.read }
         @imports.push file
         self.instance_eval(script)
