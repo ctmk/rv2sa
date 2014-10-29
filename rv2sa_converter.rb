@@ -41,7 +41,10 @@ class Rv2sa::Converter::Composition
       
       files.each_with_index do |file, index|
         filename = working_dir + file + ".rb"
-        next unless File.exist?(filename)
+        unless File.exist?(filename)
+          warn "#{filename} is not found"
+          next
+        end
         
         id = index
         name = file
