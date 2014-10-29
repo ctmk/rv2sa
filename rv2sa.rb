@@ -5,7 +5,7 @@
   Scripts.rvdata2の分解/結合を行う。
 =end
 
-Version = "2.0.0"
+Version = "2.1.0"
 
 require_relative "./rv2sa_converter"
 require "optparse"
