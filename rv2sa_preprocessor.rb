@@ -1,13 +1,11 @@
 =begin
 =end
-
 module Rv2sa; end
 
 class Rv2sa::PreProcessor
   attr_reader :variables
   
   def initialize(variables = {}, &block)
-    @buffer = []
     @variables = variables
     @indent_level = []
     @skip_level = nil
@@ -15,9 +13,11 @@ class Rv2sa::PreProcessor
   end
 
   def process(script, file_name = "")
+    buffer = []
     script.each_line.with_index do |line, line_no|
-    begin
-      process_line(line)
+      begin
+        line = process_line(line)
+        buffer.push line if line
       rescue StandardError, SyntaxError => e
         $stderr.puts "An Error has occured in '#{file_name}' l.#{line_no+1}\n #{e}"
         raise
@@ -28,7 +28,7 @@ class Rv2sa::PreProcessor
       $stderr.puts "An Error has occured in '#{file_name}'\n #{mes}"
       raise SyntaxError, mes
     end
-    @buffer.join("\n")
+    buffer.join("\n")
   end
 
   def process_line(line)
@@ -38,14 +38,14 @@ class Rv2sa::PreProcessor
       @variables.has_key?(k) ? @variables[k] : md
     }
     if md = /^\s*#([a-z][\w\?\!]*)\s*([\w\W)]*)$/.match(line)
-      process_command(md[1], md[2])
-    else
-      @buffer.push(line) unless @skip_level || line.empty?
+      line = process_command(md[1], md[2]) || ""
     end
+    line unless @skip_level || line.empty?
   end
 
   def process_command(cmd, args)
-    raise SyntaxError, "Unknown command '##{cmd}'" unless cmd && Command.method_defined?(cmd = cmd.intern)
+    cmd = cmd && cmd.intern
+    raise SyntaxError, "Unknown directive '##{cmd}'" unless cmd && Directive.method_defined?(cmd)
 
     begin
       args = eval("[#{args}]") || []
@@ -57,20 +57,32 @@ class Rv2sa::PreProcessor
       case cmd
       when :if, :ifdef, :ifndef, :else, :elif, :else_ifdef, :else_ifndef, :endif
       else
-        return false
+        return
       end
     end
 
     begin
       send(cmd, *args)
     rescue ArgumentError => e
-      raise SyntaxError, "#{cmd}(#{args}), #{e}"
+      raise SyntaxError, "Failed to call '##{cmd}' with '#{args}', #{e}"
     end
-
-    return true
   end
 
-  module Command
+  def defined(name, *args)
+    return false unless @variables.has_key?(name)
+    if args.empty?
+      true
+    else
+      v = @variables[name]
+      args.any? {|arg| arg === v }
+    end
+  end
+
+  def defined_value(name)
+    @variables[name]
+  end
+
+  module Directive
     def if(exp)
       @indent_level.push(true)
       if exp
@@ -78,7 +90,7 @@ class Rv2sa::PreProcessor
       else
         @skip_level ||= @indent_level.size
       end
-      exp
+      nil
     end
     
     def ifdef(*args)
@@ -95,6 +107,7 @@ class Rv2sa::PreProcessor
       if @skip_level && @indent_level.size < @skip_level
         @skip_level = nil
       end
+      nil
     end
     
     def else_ifdef(*args)
@@ -116,6 +129,7 @@ class Rv2sa::PreProcessor
       else
         @skip_level ||= count
       end
+      nil
     end
 
     def else
@@ -128,46 +142,39 @@ class Rv2sa::PreProcessor
       else
         @skip_level = @indent_level.size
       end
+      nil
     end
 
     def include(filename)
       begin
         script = @read_file.call(filename)
         pp = Rv2sa::PreProcessor.new(@variables, &@read_file)
-        @buffer.push pp.process(script, filename)
+        pp.process(script, filename)
       rescue StandardError, SyntaxError => e
         raise SyntaxError, "Failed to include '#{filename}', #{e}"
       end
     end
 
-    def define(name, value = true)
+    def define(name, value = nil)
       @variables[name] = value
+      nil
     end
 
-    def defined(name, *args)
-      if args.empty?
-        @variables.has_key?(name)
-      else
-        @variables.has_key?(name) && @variables[name] == args[0]
-      end
-    end
-
-    def defined_value(name)
-      @variables[name]
-    end
-
-    def undefine(name)
+    def undef(name)
       @variables.delete(name)
+      nil
     end
 
     def warning(message)
       $stderr.puts "#warning #{message}"
+      nil
     end
 
     def error(message)
       raise SyntaxError, "#error #{message}"
+      nil
     end
   end
-  include Command
+  include Directive
 end
 
