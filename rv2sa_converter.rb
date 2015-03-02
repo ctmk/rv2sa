@@ -2,6 +2,7 @@
 =end
 
 require "zlib"
+require_relative "./rv2sa_preprocessor"
 
 module Rv2sa
 module Converter
@@ -29,17 +30,21 @@ class Rv2sa::Converter::Composition
         raise InvalidFormatedFile
       end
 
-      data = compose(definition.files, work)
+      data = compose(definition, work)
       save(output, data)
     end
 
     # @return [Array] raw data for Scripts.rvdata2
-    # @param [Array<String>] files to compose
+    # @param [Definition]
     # @param [String] working_dir
-    def compose(files, working_dir = "")
+    def compose(definition, working_dir = "")
       entries = []
-      
-      files.each_with_index do |file, index|
+      pp = Rv2sa::PreProcessor.new {|file|
+        File::binread(work_dir + file + ".rb")
+      }
+      definition.flags.each {|flag| pp.define(flag, true) }
+
+      definition.files.each_with_index do |file, index|
         filename = working_dir + file + ".rb"
         unless File.exist?(filename)
           warn "#{filename} is not found"
@@ -48,7 +53,7 @@ class Rv2sa::Converter::Composition
         
         id = index
         name = file
-        bin = File::binread(filename)
+        bin = pp.process(File::binread(filename), file)
         
         entries << [id, name, Zlib::Deflate.deflate(bin)]
       end
