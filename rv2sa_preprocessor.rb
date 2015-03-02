@@ -7,17 +7,24 @@ class Rv2sa::PreProcessor
   
   def initialize(variables = {}, &block)
     @variables = variables
-    @indent_level = []
-    @skip_level = nil
     @read_file = block
+    @indent_level = []
+    @buffer = []
+    reset
+  end
+
+  def reset
+    @indent_level.clear
+    @buffer.clear
+    @skip_level = nil
   end
 
   def process(script, file_name = "")
-    buffer = []
+    reset
+    @skip_level = nil
     script.each_line.with_index do |line, line_no|
       begin
-        line = process_line(line)
-        buffer.push line if line
+        @buffer.push process_line(line)
       rescue StandardError, SyntaxError => e
         $stderr.puts "An Error has occured in '#{file_name}' l.#{line_no+1}\n #{e}"
         raise
@@ -28,7 +35,7 @@ class Rv2sa::PreProcessor
       $stderr.puts "An Error has occured in '#{file_name}'\n #{mes}"
       raise SyntaxError, mes
     end
-    buffer.join("\n")
+    @buffer.join("\n")
   end
 
   def process_line(line)
