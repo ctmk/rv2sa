@@ -18,7 +18,8 @@ class Rv2sa::Converter::Composition
     # @param [String] input filename
     # @param [String] output filename
     # @param [Array<Symbol>] flags
-    def convert(input, output, flags)
+    # @param [Boolean] debuginfo
+    def convert(input, output, flags, debuginfo)
       work = File.dirname(input) + "/"
       
       script = File.open(input) {|f| f.read }
@@ -30,21 +31,27 @@ class Rv2sa::Converter::Composition
         raise InvalidFormatedFile
       end
 
-      data = compose(definition, work)
+      data = compose(definition, work, debuginfo)
       save(output, data)
     end
 
     # @return [Array] raw data for Scripts.rvdata2
     # @param [Definition]
     # @param [String] working_dir
-    def compose(definition, working_dir = "")
+    # @param [Boolean] debuginfo
+    def compose(definition, working_dir = "", debuginfo)
       entries = []
       pp = Rv2sa::PreProcessor.new {|file|
-        File::binread(work_dir + file + ".rb")
+        File::binread(working_dir + file + ".rb")
       }
       definition.flags.each {|flag| pp.define(flag, true) }
 
-      definition.files.each_with_index do |file, index|
+      if debuginfo
+        lp = $ORIGINAL_LOAD_PATH.map {|v| "'#{v}'" }.join(",\n")
+        entries << [0, "rv2sa_definition", Zlib::Deflate.deflate("$rv2sa_path = '#{working_dir}'\n$LOAD_PATH.concat [#{lp}]")]
+      end
+
+      definition.files.each.with_index(1) do |file, index|
         filename = working_dir + file + ".rb"
         unless File.exist?(filename)
           warn "#{filename} is not found"

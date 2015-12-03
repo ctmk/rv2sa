@@ -6,6 +6,7 @@
 =end
 
 Version = "2.2.0"
+$ORIGINAL_LOAD_PATH = $LOAD_PATH.clone
 
 require_relative "./rv2sa_converter"
 require "optparse"
@@ -15,7 +16,7 @@ class String
 end
 
 module Rv2sa
-  Options = Struct.new("Options", :mode, :input, :output, :flags, )
+  Options = Struct.new("Options", :mode, :input, :output, :flags, :debuginfo, )
   class InvalidArgument < StandardError; end
 
   # @param [Array] argv
@@ -24,7 +25,7 @@ module Rv2sa
 
     case options.mode
     when :compose
-      Converter::Composition.convert(options.input, options.output, options.flags)
+      Converter::Composition.convert(options.input, options.output, options.flags, options.debuginfo)
     when :decompose
       Converter::Decomposition.convert(options.input, options.output)
     end
@@ -71,6 +72,10 @@ module Rv2sa
     
     optparser.on("-f", "--flagss=FLAGS", "flags (it works on composing)") do |val|
       options.flags = val.split(/\s*,\s*/).map(&:intern)
+    end
+
+    optparser.on("-i", "--debuginfo", "to imply debug informations") do |val|
+      options.debuginfo = true
     end
   end
   
