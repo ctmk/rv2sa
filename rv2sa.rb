@@ -5,7 +5,7 @@
   Scripts.rvdata2の分解/結合を行う。
 =end
 
-Version = "2.2.0"
+Version = "2.3.0"
 $ORIGINAL_LOAD_PATH = $LOAD_PATH.clone
 
 require_relative "./rv2sa_converter"
