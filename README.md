@@ -142,9 +142,6 @@ rv2sa を実行する際に指定したフラグは、自動的に `#define` さ
 * ファイラー上でソースコードを追加/編集する。
 * Scripts.rvdata2 を生成してからゲームを起動する。
 
-
-# 参考情報
-
 # 注意点
 * ファイルの中身はUTF-8で記述してください。
 * Game.exeの起動時にScripts.rvdata2が読み込まれます。エディター起動後にScripts.rvdata2を生成しても問題ありません。(rpgvxace1.02a時点)
@@ -161,4 +158,36 @@ rv2sa を実行する際に指定したフラグは、自動的に `#define` さ
 * 1.2.0	ファイル名を　ファイル名_index_id.rb　に変更した。
 * 1.1.0	生成時のスクリプトごとのIDを通し番号に変更した。
 * 1.0.0	最初のバージョン
+
+
+# LICENSE
+
+## rv2sa
+
+rv2saのrubyスクリプトは[NYSL](https://github.com/ctmk/rv2sa/blob/master/LICENSE)で公開されています。
+
+## rv2sa.exe
+
+rv2sa.exeはrv2saをocraでexe化したものです。
+内包する全てのソフトウェアのライセンス条件に従って使用できます。
+
+### Ruby
+
+Ruby は Ruby'sライセンス で公開されています。
+
+https://www.ruby-lang.org/ja/
+
+### ocra
+
+ocra は MIT License で公開されています。 
+
+https://github.com/larsch/ocra
+
+Copyright c 2009-2010 Lars Christensen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
