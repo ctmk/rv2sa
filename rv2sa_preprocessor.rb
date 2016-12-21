@@ -25,7 +25,9 @@ class Rv2sa::PreProcessor
     @skip_level = nil
     script.each_line.with_index do |line, line_no|
       begin
-        @buffer.push process_line(line)
+        # @todo 不要な行を削るとデバッグ時に行数がずれてこまる
+        # @todo リリース時にだけは削るようにしたい
+        @buffer.push (process_line(line) || "")
       rescue StandardError, SyntaxError => e
         $stderr.puts "An Error has occured in '#{file_name}' l.#{line_no+1}\n #{e}"
         raise
@@ -36,7 +38,7 @@ class Rv2sa::PreProcessor
       $stderr.puts "An Error has occured in '#{file_name}'\n #{mes}"
       raise SyntaxError, mes
     end
-    @buffer.join("\n")
+    @buffer.compact.join("\n") unless @excluded
   end
 
   def process_line(line)
