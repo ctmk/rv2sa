@@ -62,7 +62,7 @@ class Rv2sa::Converter::Composition
         name = file
         bin = pp.process(File::binread(filename), file)
         
-        entries << [id, name, Zlib::Deflate.deflate(bin)]
+        entries << [id, name, Zlib::Deflate.deflate(bin)] if bin
       end
 
       entries
