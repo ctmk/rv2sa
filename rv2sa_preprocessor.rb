@@ -67,7 +67,7 @@ class Rv2sa::PreProcessor
             ""
           when :NOP_LINES
             # 定義が次の行に続く場合も処理されないようにする
-            "nil if false && dummy"
+            "nil if false && dummy#{$3}"
           else
             # 文字列置換をする
             if $2
