@@ -17,6 +17,7 @@ class Rv2sa::PreProcessor
     @indent_level.clear
     @buffer.clear
     @skip_level = nil
+    @excluded = false
   end
 
   def process(script, file_name = "")
@@ -179,6 +180,11 @@ class Rv2sa::PreProcessor
 
     def error(message)
       raise SyntaxError, "#error #{message}"
+      nil
+    end
+
+    def exclude(*args)
+      @excluded = true
       nil
     end
   end
