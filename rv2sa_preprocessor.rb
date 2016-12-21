@@ -43,14 +43,46 @@ class Rv2sa::PreProcessor
 
   def process_line(line)
     line.chomp!
-    line.gsub!(/[A-Z:][A-Z0-9_]+/) {|md|
-      k = md.intern
-      @variables.has_key?(k) ? @variables[k] : md
-    }
-    if md = /^\s*#([a-z][\w\?\!]*)\s*([\w\W)]*)$/.match(line)
-      line = process_command(md[1], md[2]) || ""
+    if /^\s*#([a-z][\w\?\!]*)\s*([\w\W)]*)$/ === line
+      line = process_command($1, $2)
+    else
+      # 次の書式に対応する
+      # FUNC
+      # FUNC (a + b), c
+      # FUNC(a, b, c) or something
+      line.gsub!(/([A-Z:][A-Z0-9_]+)(?:\((.+)\))?(.+)?/) {|match|
+        k = $1.intern
+        if @variables.has_key?(k)
+          v = @variables[k]
+          case v
+          when :NOP
+            # defineされた名前だけを除外する
+            if $2
+              "(#{$2})#{$3}"
+            else
+              $3
+            end
+          when :NOP_LINE
+            # この行を除外する
+            ""
+          when :NOP_LINES
+            # 定義が次の行に続く場合も処理されないようにする
+            "nil if false && dummy"
+          else
+            # 文字列置換をする
+            if $2
+              "(#{v} #{$2})#{$3}"
+            else
+              "#{v}#{$3}"
+            end
+          end
+        else
+          # 未定義なので何もしない
+          match
+        end
+      }
     end
-    line unless @skip_level || line.empty?
+    line unless @skip_level
   end
 
   def process_command(cmd, args)
