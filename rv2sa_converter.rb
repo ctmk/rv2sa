@@ -98,8 +98,8 @@ class Rv2sa::Converter::Composition
     # ƒtƒ@ƒCƒ‹‚Ì’Ç‰Á
     # @param [Array|String] filelist
     # @param [Array<Symbol>] flags
-    def add(filelist, flags = [])
-      flags = [flags].flatten
+    def add(filelist, *flags)
+      flags.flatten!
       return unless flags.empty? || flags.any?(&@flags.method(:include?))
       filelist = filelist.unindent.split("\n") if filelist.is_a?(String)
 
@@ -110,8 +110,8 @@ class Rv2sa::Converter::Composition
     # •Ê‚ÌScripts.conf.rb‚©‚ç“Ç‚İ‚Ş
     # @param [Array|String] filelist
     # @param [Array<Symbol>] flags
-    def import(filelist, flags = [])
-      flags = [flags].flatten
+    def import(filelist, *flags)
+      flags.flatten!
       return unless flags.empty? || flags.any?(&@flags.method(:include?))
       filelist = filelist.unindent.split("\n") if filelist.is_a?(String)
 
